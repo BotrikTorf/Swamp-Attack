@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Spawner : MonoBehaviour
 {
@@ -11,6 +12,10 @@ public class Spawner : MonoBehaviour
     private int _currentWaveNumber = 0;
     private float _timeAfterLastSpawn;
     private int _spawned;
+    private int _enemyDied = 0;
+    private int _enemiesAppeared;
+
+    public event UnityAction<int, int> EnemyCountChanged;
 
     private void Start()
     {
@@ -31,7 +36,7 @@ public class Spawner : MonoBehaviour
             _timeAfterLastSpawn = 0;
         }
 
-        if (_currentWave.Count == _spawned)
+        if (_currentWave.Count == _spawned && _enemyDied == 0)
         {
             _currentWaveNumber++;
 
@@ -39,7 +44,6 @@ public class Spawner : MonoBehaviour
             {
                 SetWave(_currentWaveNumber);
             }
-
         }
     }
 
@@ -62,25 +66,33 @@ public class Spawner : MonoBehaviour
                 minotaur.Dying += OnEnemyDying;
             }
 
+            _enemyDied++;
+            _enemiesAppeared++;
+            EnemyCountChanged?.Invoke(_enemiesAppeared, _currentWave.Count);
         }
     }
 
     private void SetWave(int index)
     {
+        _enemiesAppeared = 0;
         _currentWave = _waves[index];
+        _spawned = 0;
     }
 
     private void OnEnemyDying(Enemy enemy)
     {
+        _enemyDied--;
         enemy.Dying -= OnEnemyDying;
         _target.AddMoney(enemy.Reward);
     }
 
     private void OnEnemyDying(MinotaurBlack minotaur)
     {
+        _enemyDied--;
         minotaur.Dying -= OnEnemyDying;
         _target.AddMoney(minotaur.Reward);
     }
+
 }
 
 

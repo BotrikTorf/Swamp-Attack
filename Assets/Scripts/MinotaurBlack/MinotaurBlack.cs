@@ -50,11 +50,9 @@ public class MinotaurBlack : MonoBehaviour
 
         if (_health <= 0)
         {
-            _health = 0;
+            Destroy(gameObject);
+            Dying?.Invoke(this);
         }
-
-        Destroy(gameObject);
-        Dying?.Invoke(this);
     }
 
     public void Move(Vector3 position) => transform.position = position;

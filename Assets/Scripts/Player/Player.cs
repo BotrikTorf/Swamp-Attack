@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -10,7 +8,7 @@ public class Player : MonoBehaviour
     [SerializeField] public List<Weapon> _weapons;
     [SerializeField] private int _health;
     [SerializeField] private GameObject _shootPoint;
-    [SerializeField] private CanvasGame _canvasGame;
+    [SerializeField] private WeaponPanel _weaponPanel;
     [SerializeField] private Destroyer _destroyer;
 
     private PlayerStateMachine _playerStateMachine;
@@ -24,12 +22,16 @@ public class Player : MonoBehaviour
 
 
     public event UnityAction ChangingCoins;
+    public event UnityAction<int, int> ChangingHealth;
 
-    public bool HaveAnimationLost { get; private set; }
     public int Money { get; private set; }
     public Animator Animator => _animator;
 
     public Destroyer Destroyer => _destroyer;
+
+    private void OnEnable() => _weaponPanel.ChangeState += OnChangeState;
+
+    private void OnDisable() => _weaponPanel.ChangeState -= OnChangeState;
 
     private void Start()
     {
@@ -41,16 +43,7 @@ public class Player : MonoBehaviour
         _playerStateAxe = new PlayerStateAxe();
         _playerStateRangedWeapons = new PlayerStateRangedWeapons();
         _playerStateMachine.Initialize(_playerStateAxe);
-    }
-
-    private void OnEnable()
-    {
-        _canvasGame.ChangeState += OnChangeState;
-    }
-
-    private void OnDisable()
-    {
-        _canvasGame.ChangeState -= OnChangeState;
+        ChangingCoins?.Invoke();
     }
 
     private void Update()
@@ -62,25 +55,25 @@ public class Player : MonoBehaviour
             _currentWeapon.Shoot(_shootPoint, _passedAfterShot);
 
             if (_currentWeapon.IsAttackPassed)
-            {
                 _passedAfterShot = 0;
-            }
         }
     }
 
-    public void OnEnemyDied(int reward)
+    public void BuyWeapon(Weapon weapon)
     {
-        Money += reward;
+        Money -= weapon.Price;
+        ChangingCoins?.Invoke();
+        _weapons.Add(weapon);
+        _weaponPanel.BuyWeapon(weapon);
     }
 
     public void ApplyDamage(int damage)
     {
         _currentHealth -= damage;
+        ChangingHealth?.Invoke(_currentHealth, _health);
 
         if (_currentHealth <= 0)
-        {
             Destroy(gameObject);
-        }
     }
 
     public void AddMoney(int money)
@@ -89,20 +82,17 @@ public class Player : MonoBehaviour
         ChangingCoins?.Invoke();
     }
 
-    private void OnChangeState(int numberState, int numberWeapon)
+    private void OnChangeState(int numberState, Weapon weapon)
     {
-        _currentWeapon = _weapons[numberWeapon];
+        for (int i = 0; i < _weapons.Count; i++)
+            if (_weapons[i] == weapon)
+                _currentWeapon = _weapons[i];
+
         _currentWeapon.GetAnimator(Animator);
 
         if (numberState == 0)
-        {
             _playerStateMachine.ChangeState(_playerStateAxe);
-        }
         else if(numberState == 1)
-        {
             _playerStateMachine.ChangeState(_playerStateRangedWeapons);
-        }
     }
-
-
 }

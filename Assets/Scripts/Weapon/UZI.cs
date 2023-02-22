@@ -1,10 +1,10 @@
 using UnityEngine;
 
-public class Pistol : Weapon
+public class UZI : Weapon
 {
     public override void Shoot(GameObject shootPoint, float passedAfterShot)
     {
-        _shotDelay = 0.5f;
+        _shotDelay = 0.1f;
 
         if (passedAfterShot >= _shotDelay)
         {
