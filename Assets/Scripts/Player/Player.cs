@@ -35,6 +35,7 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
+        Money = 100;
         _animator = GetComponent<Animator>();
         _currentWeapon = _weapons[0];
         _currentWeapon.GetAnimator(Animator);
@@ -44,19 +45,14 @@ public class Player : MonoBehaviour
         _playerStateRangedWeapons = new PlayerStateRangedWeapons();
         _playerStateMachine.Initialize(_playerStateAxe);
         ChangingCoins?.Invoke();
+
     }
 
     private void Update()
     {
         _passedAfterShot += Time.deltaTime;
 
-        if (Input.GetMouseButtonDown(0))
-        {
-            _currentWeapon.Shoot(_shootPoint, _passedAfterShot);
 
-            if (_currentWeapon.IsAttackPassed)
-                _passedAfterShot = 0;
-        }
     }
 
     public void BuyWeapon(Weapon weapon)
@@ -92,7 +88,15 @@ public class Player : MonoBehaviour
 
         if (numberState == 0)
             _playerStateMachine.ChangeState(_playerStateAxe);
-        else if(numberState == 1)
+        else if (numberState == 1)
             _playerStateMachine.ChangeState(_playerStateRangedWeapons);
+    }
+
+    public void Shoot()
+    {
+        _currentWeapon.Shoot(_shootPoint, _passedAfterShot);
+
+        if (_currentWeapon.IsAttackPassed)
+            _passedAfterShot = 0;
     }
 }
